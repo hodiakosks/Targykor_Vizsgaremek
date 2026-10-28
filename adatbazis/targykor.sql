@@ -426,65 +426,6 @@ BEGIN
 END$$
 
 
-
-
--- ||||||||| products |||||||||
-
--- új termék létrehozása
-DROP PROCEDURE IF EXISTS createProduct$$
-CREATE PROCEDURE createProduct(
-  IN user_idIN INT,
-  IN category_idIN INT,
-  IN county_idIN INT,
-  IN nameIN VARCHAR(100),
-  IN price_per_dayIN INT,
-  IN depositIN INT,
-  IN descriptionIN TEXT,
-  IN cityIN VARCHAR(100)
-)
-BEGIN
-  INSERT INTO products (user_id, category_id, county_id, name, price_per_day, deposit, description, city)
-  VALUES (user_idIN, category_idIN, county_idIN, nameIN, price_per_dayIN, depositIN, descriptionIN, cityIN);
-
-  SELECT LAST_INSERT_ID() AS new_product_id;
-END$$
-
-
-
-
--- ||||||||| rentals |||||||||
-
--- a usernek hány folyamatban lévő bérlése van
-DROP PROCEDURE IF EXISTS countActiveRentalByUser$$
-CREATE PROCEDURE countActiveRentalByUser(IN idIN INT)
-BEGIN
-  SELECT COUNT(*) AS active_count
-  FROM rentals
-  JOIN products ON products.id = rentals.product_id
-  WHERE (rentals.user_id = idIN OR products.user_id = idIN)
-    AND rentals.status IN ('pending', 'approved', 'active');
-END$$
-
--- trigger, a rental_status_history táblába írják be automatikusan 
-DROP TRIGGER IF EXISTS rentalsAfterInsert$$
-CREATE TRIGGER rentalsAfterInsert AFTER INSERT ON rentals
-FOR EACH ROW
-BEGIN
-  INSERT INTO rental_status_history (rental_id, old_status, new_status)
-  VALUES (NEW.id, NULL, NEW.status);
-END$$
-
--- ha változik akkor az old és a new status változik
-DROP TRIGGER IF EXISTS rentalsAfterUpdate$$
-CREATE TRIGGER rentalsAfterUpdate AFTER UPDATE ON rentals
-FOR EACH ROW
-BEGIN
-  IF OLD.status <> NEW.status THEN
-    INSERT INTO rental_status_history (rental_id, old_status, new_status)
-    VALUES (NEW.id, OLD.status, NEW.status);
-  END IF;
-END$$
-
 -- ||||||||| user_twofa |||||||||
 
 -- twofa mentése, ha már volt akkor felülírja és kikapcsolja
@@ -550,5 +491,124 @@ BEGIN
 
   SELECT ROW_COUNT() AS affected_rows;
 END$$
+
+-- ||||||||| email_verification |||||||||
+
+DROP PROCEDURE IF EXISTS createEmailVerification$$
+CREATE PROCEDURE createEmailVerification(
+  IN user_idIN INT,
+  IN tokenIN VARCHAR(255),
+  IN expires_atIN TIMESTAMP
+)
+BEGIN
+  INSERT INTO email_verifications (user_id, token, expires_at)
+  VALUES (user_idIN, tokenIN, expires_atIN);
+
+  SELECT LAST_INSERT_ID() AS new_email_verification_id;
+END$$
+
+-- kód ellenőrzése
+DROP PROCEDURE IF EXISTS getEmailVerificationByToken$$
+CREATE PROCEDURE getEmailVerificationByToken(IN tokenIN VARCHAR(255))
+BEGIN
+  SELECT id, user_id, expires_at
+  FROM email_verifications
+  WHERE token = tokenIN
+    AND verified_at IS NULL
+    AND expires_at > NOW();
+END$$
+
+-- e-mail megerősítése
+DROP PROCEDURE IF EXISTS verifyEmail$$
+CREATE PROCEDURE verifyEmail(IN tokenIN VARCHAR(255))
+BEGIN
+  UPDATE users
+  JOIN email_verifications ON email_verifications.user_id = users.id
+  SET users.email_verified_at = NOW()
+  WHERE email_verifications.token = tokenIN
+    AND email_verifications.verified_at IS NULL
+    AND email_verifications.expires_at > NOW()
+    AND users.is_deleted = 0;
+
+  UPDATE email_verifications
+  SET verified_at = NOW()
+  WHERE token = tokenIN
+    AND verified_at IS NULL
+    AND expires_at > NOW();
+
+  SELECT ROW_COUNT() AS affected_rows;
+END$$
+
+-- lejárt kódok törlése
+DROP PROCEDURE IF EXISTS deleteExpiredEmailVerification$$
+CREATE PROCEDURE deleteExpiredEmailVerification()
+BEGIN
+  DELETE FROM email_verifications
+  WHERE expires_at < NOW() AND verified_at IS NULL;
+
+  SELECT ROW_COUNT() AS affected_rows;
+END$$
+
+
+
+
+-- ||||||||| products |||||||||
+
+-- új termék létrehozása
+DROP PROCEDURE IF EXISTS createProduct$$
+CREATE PROCEDURE createProduct(
+  IN user_idIN INT,
+  IN category_idIN INT,
+  IN county_idIN INT,
+  IN nameIN VARCHAR(100),
+  IN price_per_dayIN INT,
+  IN depositIN INT,
+  IN descriptionIN TEXT,
+  IN cityIN VARCHAR(100)
+)
+BEGIN
+  INSERT INTO products (user_id, category_id, county_id, name, price_per_day, deposit, description, city)
+  VALUES (user_idIN, category_idIN, county_idIN, nameIN, price_per_dayIN, depositIN, descriptionIN, cityIN);
+
+  SELECT LAST_INSERT_ID() AS new_product_id;
+END$$
+
+
+
+
+-- ||||||||| rentals |||||||||
+
+-- a usernek hány folyamatban lévő bérlése van
+DROP PROCEDURE IF EXISTS countActiveRentalByUser$$
+CREATE PROCEDURE countActiveRentalByUser(IN idIN INT)
+BEGIN
+  SELECT COUNT(*) AS active_count
+  FROM rentals
+  JOIN products ON products.id = rentals.product_id
+  WHERE (rentals.user_id = idIN OR products.user_id = idIN)
+    AND rentals.status IN ('pending', 'approved', 'active');
+END$$
+
+-- trigger, a rental_status_history táblába írják be automatikusan 
+DROP TRIGGER IF EXISTS rentalsAfterInsert$$
+CREATE TRIGGER rentalsAfterInsert AFTER INSERT ON rentals
+FOR EACH ROW
+BEGIN
+  INSERT INTO rental_status_history (rental_id, old_status, new_status)
+  VALUES (NEW.id, NULL, NEW.status);
+END$$
+
+-- ha változik akkor az old és a new status változik
+DROP TRIGGER IF EXISTS rentalsAfterUpdate$$
+CREATE TRIGGER rentalsAfterUpdate AFTER UPDATE ON rentals
+FOR EACH ROW
+BEGIN
+  IF OLD.status <> NEW.status THEN
+    INSERT INTO rental_status_history (rental_id, old_status, new_status)
+    VALUES (NEW.id, OLD.status, NEW.status);
+  END IF;
+END$$
+
+
 
 DELIMITER ;
