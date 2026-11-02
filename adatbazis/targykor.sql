@@ -30,7 +30,7 @@ CREATE TABLE `users` (
   `deleted_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint NULL DEFAULT 0,
   UNIQUE KEY `uq_user_email` (`email`),
-  UNIQUE KEY `uq_user_username` (`username`)
+  UNIQUE KEY `uq_user_username` (`username`)  
 );
 
 DROP TABLE IF EXISTS `sessions`;
@@ -271,7 +271,7 @@ END$$
 DROP PROCEDURE IF EXISTS getAllUser$$
 CREATE PROCEDURE getAllUser()
 BEGIN
-  SELECT id, username, first_name, last_name, email, phone_number, role, last_login, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, last_login, created_at
   FROM users
   WHERE is_deleted = 0
   ORDER BY created_at DESC;
@@ -281,9 +281,17 @@ END$$
 DROP PROCEDURE IF EXISTS getUserById$$
 CREATE PROCEDURE getUserById(IN idIN INT)
 BEGIN
-  SELECT id, username, first_name, last_name, email, phone_number, role, email_verified_at, last_login, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, created_at
   FROM users
   WHERE id = idIN AND is_deleted = 0;
+END$$
+
+DROP PROCEDURE IF EXISTS getUserByUsername$$
+CREATE PROCEDURE getUserByUsername(IN usernameIN VARCHAR(100))
+BEGIN
+  SELECT id, username
+  FROM users
+  WHERE username = usernameIN AND is_deleted = 0;
 END$$
 
 -- user lekérése email alapján a belépéshez
@@ -363,6 +371,27 @@ BEGIN
   WHERE id = idIN AND is_deleted = 0;
 END$$
 
+-- jelszó módosítása
+DROP PROCEDURE IF EXISTS updateUserPasword$$
+CREATE PROCEDURE updateUserPassword(IN idIN INT, IN passwordIN VARCHAR(255))
+BEGIN
+  UPDATE users
+  SET password = passwordIN
+  WHERE id = idIN AND is_deleted = 0;
+
+  SELECT ROW_COUNT() AS affected_rows;
+END$$
+
+-- szerepkör módosítása(USER, ADMIN)
+DROP PROCEDURE IF EXISTS updateUserRole$$
+CREATE PROCEDURE updateUserRole(IN idIN INT, IN roleIN VARCHAR(10))
+BEGIN
+  UPDATE users
+  SET role = roleIN
+  WHERE id = idIN AND is_deleted = 0;
+
+  SELECT ROW_COUNT() AS affected_rows;
+END$$
 
 -- ||||||||| sessions |||||||||
 
