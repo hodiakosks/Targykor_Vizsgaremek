@@ -373,7 +373,7 @@ BEGIN
 END$$
 
 -- jelszó módosítása
-DROP PROCEDURE IF EXISTS updateUserPasword$$
+DROP PROCEDURE IF EXISTS updateUserPassword$$
 CREATE PROCEDURE updateUserPassword(IN idIN INT, IN passwordIN VARCHAR(255))
 BEGIN
   UPDATE users
@@ -407,7 +407,7 @@ BEGIN
   INSERT INTO sessions (user_id, token, expires_at)
   VALUES (user_idIN, tokenIN, expires_atIN);
 
-  SELECT LAST_INSERT_ID() AS new_session_id;
+  SELECT LAST_INSERT_ID() AS new_password_reset_id;
 END$$
 
 -- kód ellenőrzés
@@ -421,7 +421,7 @@ BEGIN
     AND expires_at > NOW();
 END$$
 
-
+-- jelszó csere
 DROP PROCEDURE IF EXISTS resetPassword$$
 CREATE PROCEDURE resetPassword(IN tokenIN VARCHAR(255), IN passwordIN VARCHAR(255))
 BEGIN
@@ -430,8 +430,7 @@ BEGIN
   SET users.password = passwordIN,
       users.failed_login_attempts = 0,
       users.locked_until = NULL
-  WHERE new_password_reset.token = tokenIN
-    AND password_resets.token = tokenIN
+  WHERE password_reset.token = tokenIN
     AND password_resets.used_at IS NULL
     AND password_resets.expires_at > NOW()
     AND users.is_deleted = 0;
@@ -441,6 +440,16 @@ BEGIN
   WHERE token = tokenIN
     AND used_at IS NULL
     AND expires_at > NOW();
+
+  SELECT ROW_COUNT() AS affected_rows;
+END$$
+
+-- lejárt kódok törlése 
+DROP PROCEDURE IF EXISTS deleteExpiredPasswordReset$$
+CREATE PROCEDURE deleteExpiredPasswordReset()
+BEGIN
+  DELETE FROM password_resets
+  WHERE expires_at < NOW();
 
   SELECT ROW_COUNT() AS affected_rows;
 END$$
