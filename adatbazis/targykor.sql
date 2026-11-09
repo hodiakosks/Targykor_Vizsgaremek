@@ -286,6 +286,7 @@ BEGIN
   WHERE id = idIN AND is_deleted = 0;
 END$$
 
+-- regisztráció foglalt-e a felhasználónév (üres = szabad)
 DROP PROCEDURE IF EXISTS getUserByUsername$$
 CREATE PROCEDURE getUserByUsername(IN usernameIN VARCHAR(100))
 BEGIN
@@ -392,6 +393,55 @@ BEGIN
 
   SELECT ROW_COUNT() AS affected_rows;
 END$$
+
+-- ||||||||| password_resets |||||||||
+
+-- jelszó visszaállító kód mentése
+DROP PROCEDURE IF EXISTS createPasswordReset$$
+CREATE PROCEDURE createPasswordReset(
+  IN user_idIN INT,
+  IN tokenIN VARCHAR(255),
+  IN expires_atIN TIMESTAMP
+)
+BEGIN
+  INSERT INTO sessions (user_id, token, expires_at)
+  VALUES (user_idIN, tokenIN, expires_atIN);
+
+  SELECT LAST_INSERT_ID() AS new_session_id;
+END$$
+
+-- kód ellenőrzés
+DROP PROCEDURE IF EXISTS getPasswordResetByToken$$
+CREATE PROCEDURE getPasswordResetByToken(IN tokenIN VARCHAR(255))
+BEGIN
+  SELECT id, user_id, expires_at
+  FROM password_resets
+  WHERE token = tokenIN
+    AND used_at IS NULL
+    AND expires_at > NOW();
+END$$
+
+
+DROP PROCEDURE IF EXISTS resetPassword$$
+CREATE PROCEDURE resetPassword(IN tokenIN VARCHAR(255), IN passwordIN VARCHAR(255))
+BEGIN
+  UPDATE users
+  JOIN password_resets ON password_resets.user_id = users.id
+  SET users.password = passwordIN,
+      users.failed_login_attempts = 0,
+      users.locked_until = NULL
+  WHERE new_password_reset.token = tokenIN
+    AND password_resets.token = tokenIN
+    AND password_resets.used_at IS NULL
+    AND password_resets.expires_at > NOW()
+    AND users.is_deleted = 0;
+  
+  UPDATE password_resets
+  SET used_at = NOW()
+  WHERE token = tokenIN
+    AND used_at IS NULL
+    AND expires_at > NOW();
+
 
 -- ||||||||| sessions |||||||||
 
