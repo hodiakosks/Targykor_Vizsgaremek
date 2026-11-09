@@ -442,6 +442,9 @@ BEGIN
     AND used_at IS NULL
     AND expires_at > NOW();
 
+  SELECT ROW_COUNT() AS affected_rows;
+END$$
+
 
 -- ||||||||| sessions |||||||||
 
