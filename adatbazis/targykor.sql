@@ -25,8 +25,8 @@ CREATE TABLE `users` (
   `last_login` timestamp NULL DEFAULT NULL,
   `failed_login_attempts` int NOT NULL DEFAULT 0,
   `locked_until` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint NULL DEFAULT 0,
   UNIQUE KEY `uq_user_email` (`email`),
@@ -53,9 +53,8 @@ CREATE TABLE `user_twofa` (
   `is_enabled` tinyint NOT NULL DEFAULT 0,
   `secret_key` varchar(255) NULL DEFAULT NULL,
   `backup_codes` varchar(1024) NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  `deleted_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint NULL DEFAULT 0,
   UNIQUE KEY `uq_twofa_user` (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
@@ -105,6 +104,16 @@ CREATE TABLE `categories` (
   UNIQUE KEY `uq_categories_name` (`name`)
 );
 
+INSERT INTO `categories` (`name`) 
+VALUES('Kerti szerszámok'),
+  ('Fűnyírók és fűkaszák'),
+  ('Elektromos szerszámok'),
+  ('Létrák és állványok'),
+  ('Kerti bútorok'),
+  ('Grillek és sütők'),
+  ('Sátrak és rendezvényfelszerelés'),
+  ('Locsolás és öntözés');
+
 DROP TABLE IF EXISTS `counties`;
 CREATE TABLE `counties` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
@@ -131,8 +140,8 @@ CREATE TABLE `products` (
   `deposit` int NOT NULL DEFAULT 0,
   `description` text NOT NULL,
   `city` varchar(100) NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint NULL DEFAULT 0,
   CONSTRAINT `chk_products_price` CHECK (`price_per_day` > 0),
@@ -354,9 +363,14 @@ DROP PROCEDURE IF EXISTS loginFailed$$
 CREATE PROCEDURE loginFailed(IN emailIN VARCHAR(255))
 BEGIN
   UPDATE users
-  SET locked_until = IF(failed_login_attempts + 1 >= 5,
-    NOW() + INTERVAL 15 MINUTE, locked_until),
-    failed_login_attempts = failed_login_attempts + 1
+  SET failed_login_attempts = IF(
+    locked_until IS NOT NULL AND locked_until <= NOW(),
+    1,
+    failed_login_attempts +1
+  ),
+  locked_until = IF(
+    failed_login_attempts >=10,
+    NOW() + INTERVAL 15 MINUTE, NULL)
   WHERE email = emailIN AND is_deleted = 0;
 END$$
 
