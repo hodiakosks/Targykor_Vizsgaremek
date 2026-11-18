@@ -272,8 +272,11 @@ BEGIN
   INSERT INTO users (username, first_name, last_name, email, phone_number, password)
   VALUES (usernameIN, first_nameIN, last_nameIN, emailIN, phone_numberIN, passwordIN);
 
-  SELECT LAST_INSERT_ID() AS new_user_id;
+  SELECT id, username, first_name, last_name, email, phone_number, password
+  FROM users
+  WHERE id = LAST_INSERT_ID();
 END$$
+
 
 
 -- az összes felhasználó listája (password nincs benne)
@@ -303,6 +306,9 @@ BEGIN
   FROM users
   WHERE username = usernameIN AND is_deleted = 0;
 END$$
+
+
+
 
 -- user lekérése email alapján a belépéshez
 DROP PROCEDURE IF EXISTS getUserByEmail$$
