@@ -272,7 +272,7 @@ BEGIN
   INSERT INTO users (username, first_name, last_name, email, phone_number, password)
   VALUES (usernameIN, first_nameIN, last_nameIN, emailIN, phone_numberIN, passwordIN);
 
-  SELECT id, username, first_name, last_name, email, phone_number
+  SELECT id, username, avatar_url, first_name, last_name, email, phone_number, role, email_verified_at, last_login, created_at
   FROM users
   WHERE id = LAST_INSERT_ID();
 END$$
