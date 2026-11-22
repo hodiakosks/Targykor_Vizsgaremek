@@ -272,7 +272,7 @@ BEGIN
   INSERT INTO users (username, first_name, last_name, email, phone_number, password)
   VALUES (usernameIN, first_nameIN, last_nameIN, emailIN, phone_numberIN, passwordIN);
 
-  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, password, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at, updated_at, deleted_at, is_deleted
   FROM users
   WHERE id = LAST_INSERT_ID();
 END$$
@@ -283,7 +283,7 @@ END$$
 DROP PROCEDURE IF EXISTS getAllUser$$
 CREATE PROCEDURE getAllUser()
 BEGIN
-  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, password, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at, updated_at, deleted_at, is_deleted
   FROM users
   WHERE is_deleted = 0
   ORDER BY created_at DESC;
@@ -293,7 +293,7 @@ END$$
 DROP PROCEDURE IF EXISTS getUserById$$
 CREATE PROCEDURE getUserById(IN idIN INT)
 BEGIN
-  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, password, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at, updated_at, deleted_at, is_deleted
   FROM users
   WHERE id = idIN AND is_deleted = 0;
 END$$
@@ -302,7 +302,7 @@ END$$
 DROP PROCEDURE IF EXISTS getUserByUsername$$
 CREATE PROCEDURE getUserByUsername(IN usernameIN VARCHAR(100))
 BEGIN
-  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, password, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at, updated_at, deleted_at, is_deleted
   FROM users
   WHERE username = usernameIN AND is_deleted = 0;
 END$$
@@ -314,7 +314,7 @@ END$$
 DROP PROCEDURE IF EXISTS getUserByEmail$$
 CREATE PROCEDURE getUserByEmail(IN emailIN VARCHAR(255))
 BEGIN
-  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, password, role, email_verified_at, failed_login_attempts, locked_until, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, password, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at, updated_at, deleted_at, is_deleted
   FROM users
   WHERE email = emailIN AND is_deleted = 0;
 END$$
