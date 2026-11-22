@@ -283,7 +283,7 @@ END$$
 DROP PROCEDURE IF EXISTS getAllUser$$
 CREATE PROCEDURE getAllUser()
 BEGIN
-  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, last_login, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at
   FROM users
   WHERE is_deleted = 0
   ORDER BY created_at DESC;
@@ -293,7 +293,7 @@ END$$
 DROP PROCEDURE IF EXISTS getUserById$$
 CREATE PROCEDURE getUserById(IN idIN INT)
 BEGIN
-  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, created_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at
   FROM users
   WHERE id = idIN AND is_deleted = 0;
 END$$
@@ -302,7 +302,7 @@ END$$
 DROP PROCEDURE IF EXISTS getUserByUsername$$
 CREATE PROCEDURE getUserByUsername(IN usernameIN VARCHAR(100))
 BEGIN
-  SELECT id, username
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, role, email_verified_at, last_login, failed_login_attempts, locked_until, created_at
   FROM users
   WHERE username = usernameIN AND is_deleted = 0;
 END$$
@@ -314,10 +314,11 @@ END$$
 DROP PROCEDURE IF EXISTS getUserByEmail$$
 CREATE PROCEDURE getUserByEmail(IN emailIN VARCHAR(255))
 BEGIN
-  SELECT id, username, email, password, role, failed_login_attempts, locked_until, email_verified_at
+  SELECT id, username, first_name, last_name, avatar_url, email, phone_number, password, role, email_verified_at, failed_login_attempts, locked_until, created_at
   FROM users
   WHERE email = emailIN AND is_deleted = 0;
 END$$
+
 
 -- profil módosítása
 DROP PROCEDURE IF EXISTS updateUser$$
@@ -331,11 +332,11 @@ CREATE PROCEDURE updateUser(
 )
 BEGIN
   UPDATE users
-  SET email_verified_at = IF(email <> emailIN, NULL, email_verified_at),
-      username     = usernameIN,
-      first_name   = first_nameIN,
-      last_name    = last_nameIN,
-      email        = emailIN,
+  SET email_verified_at = IF(email != emailIN, NULL, email_verified_at),
+      username = usernameIN,
+      first_name = first_nameIN,
+      last_name = last_nameIN,
+      email = emailIN,
       phone_number = phone_numberIN
   WHERE id = idIN AND is_deleted = 0;
 
@@ -364,7 +365,7 @@ BEGIN
   WHERE id = idIN AND is_deleted = 0;
 END$$
 
--- hibás jelszó, 5. próbálkozásnál zárol
+-- hibás jelszó, 10. próbálkozásnál zárol
 DROP PROCEDURE IF EXISTS loginFailed$$
 CREATE PROCEDURE loginFailed(IN emailIN VARCHAR(255))
 BEGIN
@@ -424,7 +425,7 @@ CREATE PROCEDURE createPasswordReset(
   IN expires_atIN TIMESTAMP
 )
 BEGIN
-  INSERT INTO sessions (user_id, token, expires_at)
+  INSERT INTO password_resets (user_id, token, expires_at)
   VALUES (user_idIN, tokenIN, expires_atIN);
 
   SELECT LAST_INSERT_ID() AS new_password_reset_id;
@@ -450,7 +451,7 @@ BEGIN
   SET users.password = passwordIN,
       users.failed_login_attempts = 0,
       users.locked_until = NULL
-  WHERE password_reset.token = tokenIN
+  WHERE password_resets.token = tokenIN
     AND password_resets.used_at IS NULL
     AND password_resets.expires_at > NOW()
     AND users.is_deleted = 0;
@@ -714,7 +715,7 @@ DROP TRIGGER IF EXISTS rentalsAfterUpdate$$
 CREATE TRIGGER rentalsAfterUpdate AFTER UPDATE ON rentals
 FOR EACH ROW
 BEGIN
-  IF OLD.status <> NEW.status THEN
+  IF OLD.status != NEW.status THEN
     INSERT INTO rental_status_history (rental_id, old_status, new_status)
     VALUES (NEW.id, OLD.status, NEW.status);
   END IF;
