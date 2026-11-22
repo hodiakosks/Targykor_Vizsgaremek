@@ -328,7 +328,8 @@ CREATE PROCEDURE updateUser(
   IN first_nameIN VARCHAR(50),
   IN last_nameIN VARCHAR(50),
   IN emailIN VARCHAR(255),
-  IN phone_numberIN VARCHAR(50)
+  IN phone_numberIN VARCHAR(50),
+  IN avatar_urlIN VARCHAR(255)
 )
 BEGIN
   UPDATE users
@@ -338,6 +339,7 @@ BEGIN
       last_name = last_nameIN,
       email = emailIN,
       phone_number = phone_numberIN
+      avatar_url   = avatar_urlIN
   WHERE id = idIN AND is_deleted = 0;
 
   SELECT ROW_COUNT() AS affected_rows;
