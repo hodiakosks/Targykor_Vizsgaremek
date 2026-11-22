@@ -338,7 +338,7 @@ BEGIN
       first_name = first_nameIN,
       last_name = last_nameIN,
       email = emailIN,
-      phone_number = phone_numberIN
+      phone_number = phone_numberIN,
       avatar_url   = avatar_urlIN
   WHERE id = idIN AND is_deleted = 0;
 
@@ -356,6 +356,7 @@ BEGIN
 
   SELECT ROW_COUNT() AS affected_rows;
 END$$
+
 
 -- fiók törlése (0 -> 1)
 DROP PROCEDURE IF EXISTS softDeleteUser$$
