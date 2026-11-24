@@ -149,6 +149,7 @@ button {
 .btn-primary {
 
     color: var(--primary);;
+    background-color: var(--accent);
     border: none;
     padding: 12px 20px;
     border-radius: 5px;
@@ -271,11 +272,10 @@ button {
 .promo-badge {
     color: var(--dark);
     display: inline-block;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 800;
     border-radius: 5px;
     margin-bottom: 14px;
-    text-transform: uppercase;
 }
 
 .hero-banner-card h3 {
