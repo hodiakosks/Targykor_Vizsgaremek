@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tárgykör</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="targykor.component.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="container nav-inner">
+            <div class="logo" id="logoBtn">
+                <div> <img src="targykor.jpeg" alt="Tárgykör ikon"></div>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Mit szeretnél kölcsönözni? (pl. ütvefúró, sátor, projektor)">
+                <select id="cityFilter">
+                    <option value="all">Minden megye</option>
+                    <option value="Pécs">Baranya</option>
+                    <option value="Budapest">Pest</option>
+                    <option value="Szeged">Somogy</option>
+                    <option value="Debrecen">Vas</option>
+                    <option value="Győr">Szabolcs-Szatmár-Bereg</option>
+                </select>
+            </div>
+
+            <div class="nav-actions">
+                <button class="btn-icon" id="openFavoritesBtn" title="Kedvencek">
+                    Kedvencek:<span class="badge" id="favCountBadge">0</span>
+                </button>
+                <button class="btn-secondary" id="openBookingsBtn">
+                    Foglalásaim: <span id="bookingCountBadge">1</span>
+                </button>
+                <button class="btn-primary" id="openUploadModalBtn">
+                    Tárgy feltöltése
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-inner">
+            <div class="hero-content">
+                <span class="hero-tag">Vásárlás helyett bérelhetsz, és pénzt kereshetsz a saját eszközeiddel!</span>        
+            </div>
+            <div class="hero-banner-card">
+                <div class="promo-badge"><h1>Kiemelt lehet a terméked!</h1></div>
+                <h3>Ha fizetsz, több embernek fogjuk ajánlani a bérbeadni kívánt terméked!</h3>
+                <div class="promo-price">500 Ft <span>/ nap</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="controls-bar">
+        <div class="container controls-inner">
+            <div class="category-tabs" id="categoryTabs">
+                <button class="cat-tab active" data-cat="all">Összes</button>
+                <button class="cat-tab" data-cat="Barkácsgépek">Barkácsgépek</button>
+                <button class="cat-tab" data-cat="Kerti eszközök">Kerti eszközök</button>
+                <button class="cat-tab" data-cat="Elektronika">Elektronika</button>
+                <button class="cat-tab" data-cat="Kemping & Sport">Kemping és Sport</button>
+                <button class="cat-tab" data-cat="Rendezvény">Szórakozás</button>
+            </div>
+
+            <div class="filter-controls">
+                <div class="price-range-box">
+                    <label for="maxPriceRange">Max. díj: <strong id="priceValueLabel">15 000 Ft</strong>/nap</label>
+                    <input type="range" id="maxPriceRange" min="1000" max="15000" step="500" value="15000">
+                </div>
+                <select id="sortSelect" class="sort-select">
+                    <option value="popular">Népszerűség szerint</option>
+                    <option value="price-asc">Ár: Alacsonytól magasig</option>
+                    <option value="price-desc">Ár: Magastól alacsonyig</option>
+                    <option value="rating">Értékelés szerint</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <main class="container main-section">
+        <div class="results-header">
+            <h2 id="resultsCountText">Elérhető tárgyak (8 db)</h2>
+            <button class="btn-reset" id="resetFiltersBtn">Szűrők visszaállítása</button>
+        </div>
+
+        <div class="items-grid card" id="itemsGrid">
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="bookingModal">
+        <div class="modal-card modal-large">
+            <button class="modal-close" id="closeBookingModal">&times;</button>
+            <div class="modal-grid">
+                <div class="modal-left">
+                    <img id="modalItemImg" src="" alt="Tárgy képe" class="modal-img">
+                    <div class="modal-meta">
+                        <span class="modal-cat-badge" id="modalItemCat"></span>
+                        <span class="modal-city-badge" id="modalItemCity"></span>
+                        <span class="modal-rating-badge" id="modalItemRating"></span>
+                    </div>
+                    <h2 id="modalItemTitle"></h2>
+                    <p id="modalItemDesc" class="modal-desc"></p>
+                    <div class="owner-card">
+                        <div class="owner-avatar" id="modalOwnerAvatar"></div>
+                        <div>
+                            <div class="owner-name" id="modalOwnerName"></div>
+                            <div class="owner-sub">Ellenőrzött bérbeadó • Átlagos válaszidő: 15 perc</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-right">
+                    <h3>Kölcsönzés kalkulátor</h3>
+                    <div class="price-header">
+                        <span id="modalItemPrice">0</span> Ft <small>/ nap</small>
+                    </div>
+
+                    <div class="date-inputs">
+                        <div class="input-group">
+                            <label for="startDate">Átvétel napja</label>
+                            <input type="date" id="startDate">
+                        </div>
+                        <div class="input-group">
+                            <label for="endDate">Visszaadás napja</label>
+                            <input type="date" id="endDate">
+                        </div>
+                    </div>
+
+                    <div class="calc-breakdown">
+                        <div class="calc-row">
+                            <span>Időtartam:</span>
+                            <strong id="calcDays">2 nap</strong>
+                        </div>
+                        <div class="calc-row">
+                            <span>Bérleti díj összesen:</span>
+                            <strong id="calcBaseTotal">0 Ft</strong>
+                        </div>
+                        <div class="calc-row">
+                            <span>Tárgykör kárvédelem (5%):</span>
+                            <strong id="calcInsurance">0 Ft</strong>
+                        </div>
+                        <div class="calc-row deposit-row">
+                            <span>Visszajáró kaució (helyszínen):</span>
+                            <strong id="calcDeposit">0 Ft</strong>
+                        </div>
+                        <hr>
+                        <div class="calc-row total-row">
+                            <span>Most fizetendő:</span>
+                            <strong id="calcGrandTotal">0 Ft</strong>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary btn-full" id="confirmBookingBtn">Kölcsönzés véglegesítése</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal-card">
+            <button class="modal-close" id="closeUploadModal">&times;</button>
+            <h2>Új tárgy meghirdetése</h2>
+            <p class="modal-subtitle">Add meg az eszköz adatait, és kezdj el pénzt keresni vele!</p>
+
+            <form id="uploadForm" class="upload-form">
+                <div class="input-group">
+                    <label>Tárgy megnevezése *</label>
+                    <input type="text" id="upTitle" required placeholder="pl. Kärcher Magasnyomású Mosó K4">
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Kategória *</label>
+                        <select id="upCategory" required>
+                            <option value="Barkácsgépek">Barkácsgépek</option>
+                            <option value="Kerti eszközök">Kerti eszközök</option>
+                            <option value="Elektronika">Elektronika</option>
+                            <option value="Kemping & Sport">Kemping & Sport</option>
+                            <option value="Rendezvény">Rendezvény</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Város *</label>
+                        <select id="upCity" required>
+                            <option value="Pécs">Pécs</option>
+                            <option value="Budapest">Budapest</option>
+                            <option value="Szeged">Szeged</option>
+                            <option value="Debrecen">Debrecen</option>
+                            <option value="Győr">Győr</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Napi bérleti díj (Ft) *</label>
+                        <input type="number" id="upPrice" required min="500" step="100" placeholder="4500">
+                    </div>
+                    <div class="input-group">
+                        <label>Kaució összege (Ft) *</label>
+                        <input type="number" id="upDeposit" required min="0" step="1000" placeholder="25000">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Kép URL (opcionális)</label>
+                    <input type="url" id="upImage" placeholder="https://images.unsplash.com/...">
+                </div>
+
+                <div class="input-group">
+                    <label>Rövid leírás és tartozékok *</label>
+                    <textarea id="upDesc" rows="3" required placeholder="Milyen állapotban van? Mit adsz hozzá?"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary btn-full">Hirdetés közzététele</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="drawer-overlay" id="sideDrawerOverlay">
+        <div class="side-drawer">
+            <div class="drawer-header">
+                <h3 id="drawerTitle">Saját kölcsönzéseim</h3>
+                <button class="modal-close" id="closeDrawerBtn">&times;</button>
+            </div>
+            <div class="drawer-body" id="drawerContent">
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="targykor.js"></script>
+</body>
+</html>
